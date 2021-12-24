@@ -36,6 +36,8 @@ class Snap extends CI_Controller
 
 	public function token()
 	{
+		$price = $this->input->post('price');
+
 
 		// Required
 		$transaction_details = array(
@@ -127,4 +129,92 @@ class Snap extends CI_Controller
 		var_dump($result);
 		echo '</pre>';
 	}
+
+	// my method
+	public function spp()
+	{
+		$this->load->view('pembayaran_spp');
+	}
+	public function transaksi()
+	{
+		$name = $this->input->post('name');
+		$kelas = $this->input->post('kelas');
+		$price = $this->input->post('price');
+
+
+		// Required
+		$transaction_details = array(
+			'order_id' => rand(),
+			'gross_amount' => $price, // no decimal allowed for creditcard
+		);
+
+		// Optional
+		$item1_details = array(
+			'id' => 'a1',
+			'price' => $price,
+			'quantity' => 1,
+			'name' => "Pembayaran Spp " . $kelas
+		);
+
+		// Optional
+		$item_details = array($item1_details);
+
+		// Optional
+		$billing_address = array(
+			'first_name'    => $name,
+			'last_name'     => "",
+			'address'       => "Mangga 20",
+			'city'          => "Jakarta",
+			'postal_code'   => "16602",
+			'phone'         => "081122334455",
+			'country_code'  => 'IDN'
+		);
+
+		// Optional
+		$shipping_address = array(
+			'first_name'    => "Obet",
+			'last_name'     => "Supriadi",
+			'address'       => "Manggis 90",
+			'city'          => "Jakarta",
+			'postal_code'   => "16601",
+			'phone'         => "08113366345",
+			'country_code'  => 'IDN'
+		);
+
+		// Optional
+		$customer_details = array(
+			'first_name'    => $name .  ' for ' . $kelas,
+			'last_name'     => "",
+			'email'         => "andri@litani.com",
+			'phone'         => "081122334455",
+			'billing_address'  => $billing_address,
+			'shipping_address' => $shipping_address
+		);
+
+		// Data yang akan dikirim untuk request redirect_url.
+		$credit_card['secure'] = true;
+		//ser save_card true to enable oneclick or 2click
+		//$credit_card['save_card'] = true;
+
+		$time = time();
+		$custom_expiry = array(
+			'start_time' => date("Y-m-d H:i:s O", $time),
+			'unit' => 'minute',
+			'duration'  => 2
+		);
+
+		$transaction_data = array(
+			'transaction_details' => $transaction_details,
+			'item_details'       => $item_details,
+			'customer_details'   => $customer_details,
+			'credit_card'        => $credit_card,
+			'expiry'             => $custom_expiry
+		);
+
+		error_log(json_encode($transaction_data));
+		$snapToken = $this->midtrans->getSnapToken($transaction_data);
+		error_log($snapToken);
+		echo $snapToken;
+	}
+	// end
 }
