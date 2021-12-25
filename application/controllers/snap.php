@@ -1,4 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Method: GET, OPTIONS*');
 
 class Snap extends CI_Controller
 {
@@ -104,8 +106,8 @@ class Snap extends CI_Controller
 		$time = time();
 		$custom_expiry = array(
 			'start_time' => date("Y-m-d H:i:s O", $time),
-			'unit' => 'minute',
-			'duration'  => 2
+			'unit' => 'day',
+			'duration'  => 1
 		);
 
 		$transaction_data = array(
@@ -124,16 +126,31 @@ class Snap extends CI_Controller
 
 	public function finish()
 	{
-		$result = json_decode($this->input->post('result_data'));
-		echo 'RESULT <br><pre>';
-		var_dump($result);
-		echo '</pre>';
+		$result = json_decode($this->input->post('result_data'), true);
+		$data = [
+			'order_id' => $result['order_id'],
+			'gross_amount' => $result['gross_amount'],
+			'payment_type' => $result['payment_type'],
+			'transaction_time' => $result['transaction_time'],
+			'transaction_status' => $result['transaction_status'],
+			'bank' => $result['va_numbers'][0]['bank'],
+			'va_number' => $result['va_numbers'][0]['va_number'],
+			'pdf_url' => $result['pdf_url'],
+			'status_code' => $result['status_code'],
+		];
+
+		$this->db->insert('transaction_midtrans', $data);
+		redirect('/snap/spp');
+		// echo 'RESULT <br><pre>';
+		// var_dump($result['va_numbers'][0]['bank']);
+		// echo '</pre>';
 	}
 
 	// my method
 	public function spp()
 	{
-		$this->load->view('pembayaran_spp');
+		$data['pending'] = $this->db->get('transaction_midtrans')->result_array();
+		$this->load->view('pembayaran_spp', $data);
 	}
 	public function transaksi()
 	{
